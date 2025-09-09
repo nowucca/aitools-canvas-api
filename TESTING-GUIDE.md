@@ -9,6 +9,79 @@ This guide provides step-by-step testing examples based on real production usage
 - Canvas API token configured in `canvas_config.json`
 - External grader script available (in separate UV environment)
 
+## Setup: Install Drop-in Ready Grader
+
+Before testing, you'll need a working grader. We provide a ready-to-use discussion grader that works perfectly with this system:
+
+### Step 1: Clone the Discussion Grader
+
+```bash
+# Navigate to the parent directory of your canvas-api project
+cd /path/to/your/projects/
+
+# Clone the drop-in ready grader
+git clone https://github.com/nowucca/aitools-discussion-grader.git
+
+# Your directory structure should now look like:
+# /path/to/your/projects/
+# ├── canvas_api/                    # This repository (aitools-canvas-api)
+# │   ├── canvas_speedgrader.py
+# │   ├── uv_grader_wrapper.sh
+# │   └── ...
+# └── aitools-discussion-grader/     # The external grader
+#     ├── pyproject.toml
+#     ├── discussion-grader/
+#     │   └── canvas_speedgrader.py  # The actual grader script
+#     └── ...
+```
+
+### Step 2: Set Up the External Grader
+
+```bash
+cd aitools-discussion-grader
+
+# Install dependencies in isolated UV environment
+uv sync
+
+# Test the grader works
+echo '{
+  "student_name": "Test Student",
+  "student_login": "testuser", 
+  "submission_text": "This is a test submission for grading.",
+  "word_count": 8,
+  "timestamp": "2025-09-09T01:22:00Z"
+}' | uv run python discussion-grader/canvas_speedgrader.py
+```
+
+**Expected Output:**
+```json
+{
+  "grade": "7",
+  "comment": "Good response with detailed analysis...",
+  "points": 7,
+  "word_count": 8,
+  "meets_word_count": false,
+  "improvement_suggestions": [...]
+}
+```
+
+### Step 3: Configure UV Wrapper
+
+Update your `uv_grader_wrapper.sh` to point to the external grader:
+
+```bash
+# Edit uv_grader_wrapper.sh and set these variables:
+PROJECT_PATH="/path/to/your/projects/aitools-discussion-grader"
+GRADER_SCRIPT="discussion-grader/canvas_speedgrader.py"
+```
+
+Or set them as environment variables:
+
+```bash
+export PROJECT_PATH="/path/to/your/projects/aitools-discussion-grader"
+export GRADER_SCRIPT="discussion-grader/canvas_speedgrader.py"
+```
+
 ## Testing Workflow Overview
 
 ```
